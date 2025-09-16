@@ -42,33 +42,23 @@ class LoginController extends Controller
         ], 201);
     }
 
-public function loginowner(Request $request)
-{
+public function loginowner(Request $request){
     $request->validate([
         'email' => 'required|email',
         'password' => 'required',
     ]);
 
-    // Find user by email and role
     $owner = User::where('email', $request->input("email")) 
                  ->where('role', 'owner')
                  ->first();
 
-    // Check if owner exists and password is correct
     if (!$owner || !Hash::check($request->input("password"), $owner->password)) {
         return response()->json(['error' => 'Invalid credentials'], 401);
     }
 
-    // Check for existing valid token
-    $existingToken = $owner->tokens()->where('revoked', false)->first();
-
-    if ($existingToken) {
-        $accessToken = $existingToken->id; // reuse existing token
-    } else {
-        // Create a new token if none exists
-        $tokenResult = $owner->createToken('OwnerToken');
-        $accessToken = $tokenResult->accessToken;
-    }
+    // Always create a new valid token
+    $tokenResult = $owner->createToken('OwnerToken');
+    $accessToken = $tokenResult->accessToken;
 
     return response()->json([
         'token' => $accessToken,
@@ -81,6 +71,7 @@ public function loginowner(Request $request)
         ]
     ], 200);
 }
+
 
 
     public function verifyToken(Request $request)

@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('type'); 
-            $table->string('ville'); 
+            $table->enum('type',['Appartement','Villa','Maison','Studio','Duplex','Terrain','Bureau','Local Commercial','Chambre']); ; 
+            $table->enum('ville', ['Casablanca', 'Rabat', 'Marrakech', 'Tanger', 'Fes', 'Agadir', 'Meknes', 'Oujda', 'Kenitra', 'Tetouan']); 
             $table->string('quartier'); 
             $table->string('description'); 
             $table->enum('purpose', ['sale', 'rent']);
