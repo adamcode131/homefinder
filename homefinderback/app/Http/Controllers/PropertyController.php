@@ -5,40 +5,40 @@ namespace App\Http\Controllers;
 use App\Models\Image;
 use App\Models\Property;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PropertyController extends Controller
 {
-    public function storeProperties(Request $request, $ownerid){
-        
+    public function storeProperties(Request $request)
+    {
         $rentPrice = null;
         $salePrice = null;
-
-        if ($request->input('purpose') === 'rent') {
+        $owner = Auth::user();
+         
+        if ($request->input('intention') === 'loyer') {
             $rentPrice = $request->input('rent_price');
             $salePrice = 0;
-        } elseif ($request->input('purpose') === 'sale') {
+        } elseif ($request->input('intention') === 'vente') {
             $salePrice = $request->input('sale_price');
             $rentPrice = 0;
         }
 
-        // Create the property
         $property = Property::create([
             'title'       => $request->input('title'),
             'description' => $request->input('description'),
-            'purpose'     => $request->input('purpose'),
+            'intention'   => $request->input('intention'),
             'type'        => $request->input('type'),
-            'ville'       => $request->input('ville'),
-            'quartier'    => $request->input('quartier'),
+            'ville_id'    => $request->input('ville_id'),
+            'quartier_id' => $request->input('quartier_id'),
             'rent_price'  => $rentPrice,
             'sale_price'  => $salePrice,
-            'owner_id'    => $ownerid,
+            'owner_id'    => $owner->id,
         ]);
 
-        // Handle images
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $path = $image->store('properties', 'public'); // storage/app/public/properties
-
+                $path = $image->store('properties', 'public');
+                
                 Image::create([
                     'url'         => $path,
                     'property_id' => $property->id,
@@ -48,24 +48,16 @@ class PropertyController extends Controller
 
         return response()->json([
             'message'  => 'Property created successfully',
-            'property' => $property->load('images') 
+            'property' => $property->load('images')
         ], 201);
-    } 
+    }
 
-public function getProperties($ownerid)
-{
-    $properties = Property::where('owner_id', $ownerid)
-                          ->with('images') // eager load images
-                          ->get();
+    public function getProperties()
+    {
+        $properties = Property::with('images')->get();
 
-    return response()->json([
-        'properties' => $properties
-    ], 200);
+        return response()->json([
+            'properties' => $properties
+        ], 200);
+    }
 }
-
-
-
-} 
-
-
-

@@ -74,8 +74,7 @@ public function loginowner(Request $request){
 
 
 
-    public function verifyToken(Request $request)
-    {
+    public function verifyToken(Request $request){
         $user = $request->user();
         
         if (!$user) {

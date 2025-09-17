@@ -17,15 +17,13 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->enum('type',['Appartement','Villa','Maison','Studio','Duplex','Terrain','Bureau','Local Commercial','Chambre']); ; 
-            $table->enum('ville', ['Casablanca', 'Rabat', 'Marrakech', 'Tanger', 'Fes', 'Agadir', 'Meknes', 'Oujda', 'Kenitra', 'Tetouan']); 
-            $table->string('quartier'); 
+            $table->foreignId('ville_id')->constrained()->onDelete('cascade');
+            $table->foreignId('quartier_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('description'); 
-            $table->enum('purpose', ['sale', 'rent']);
+            $table->enum('intention', ['vente', 'loyer']);
             $table->integer('sale_price'); 
             $table->integer('rent_price'); 
             $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
-            
-            
             $table->timestamps();
         });
     }
