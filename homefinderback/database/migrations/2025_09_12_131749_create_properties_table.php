@@ -24,6 +24,7 @@ return new class extends Migration
             $table->integer('sale_price'); 
             $table->integer('rent_price'); 
             $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
+            $table->boolean('is_validated')->default(false) ; 
             $table->timestamps();
         });
     }

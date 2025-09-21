@@ -42,4 +42,12 @@ class Property extends Model
         return $this->hasMany(Image::class);
     }
 
+    public function ville(){
+        return $this->belongsTo(Ville::class);
+    }
+
+    public function quartier(){
+        return $this->belongsTo(Quartier::class);
+    }
+
 }

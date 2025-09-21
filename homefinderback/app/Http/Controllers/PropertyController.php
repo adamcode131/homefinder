@@ -9,19 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class PropertyController extends Controller
 {
+    // CREATE new property
     public function storeProperties(Request $request)
     {
-        $rentPrice = null;
-        $salePrice = null;
         $owner = Auth::user();
-         
-        if ($request->input('intention') === 'loyer') {
-            $rentPrice = $request->input('rent_price');
-            $salePrice = 0;
-        } elseif ($request->input('intention') === 'vente') {
-            $salePrice = $request->input('sale_price');
-            $rentPrice = 0;
-        }
+        $rentPrice = $request->input('intention') === 'loyer' ? $request->input('rent_price') : 0;
+        $salePrice = $request->input('intention') === 'vente' ? $request->input('sale_price') : 0;
 
         $property = Property::create([
             'title'       => $request->input('title'),
@@ -35,10 +28,10 @@ class PropertyController extends Controller
             'owner_id'    => $owner->id,
         ]);
 
+        // Save uploaded images
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store('properties', 'public');
-                
                 Image::create([
                     'url'         => $path,
                     'property_id' => $property->id,
@@ -52,12 +45,101 @@ class PropertyController extends Controller
         ], 201);
     }
 
+    // GET all properties
     public function getProperties()
     {
-        $properties = Property::with('images')->get();
+        $properties = Property::with(['images', 'ville', 'quartier'])->get();
 
         return response()->json([
             'properties' => $properties
         ], 200);
     }
+
+    // GET single property or UPDATE property
+        public function updateProperty(Request $request, $propertyId)
+        {
+            $user = Auth::user();
+            $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
+
+            // Check ownership
+            if ($property->owner_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // GET request → return property data for prefill
+            if ($request->isMethod('get')) {
+                return response()->json(['property' => $property], 200);
+            }
+
+            // POST request → update property
+            $request->validate([
+                'title'       => 'required|string|max:255',
+                'description' => 'required|string',
+                'intention'   => 'required|in:vente,loyer',
+                'type'        => 'required|string',
+                'ville_id'    => 'required|exists:villes,id',
+                'quartier_id' => 'nullable|exists:quartiers,id',
+                'rent_price'  => 'nullable|numeric|min:0',
+                'sale_price'  => 'nullable|numeric|min:0',
+                'images.*'    => 'nullable|image|max:5120',
+            ]);
+
+            $rentPrice = $request->input('intention') === 'loyer' ? $request->input('rent_price') : 0;
+            $salePrice = $request->input('intention') === 'vente' ? $request->input('sale_price') : 0;
+
+            $property->update([
+                'title'       => $request->input('title'),
+                'description' => $request->input('description'),
+                'intention'   => $request->input('intention'),
+                'type'        => $request->input('type'),
+                'ville_id'    => $request->input('ville_id'),
+                'quartier_id' => $request->input('quartier_id'),
+                'rent_price'  => $rentPrice,
+                'sale_price'  => $salePrice,
+            ]);
+
+            // Add new images if uploaded
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('properties', 'public');
+                    $property->images()->create(['url' => $path]);
+                }
+            }
+
+            // Return updated property with relationships
+            return response()->json([
+                'message'  => 'Property updated successfully',
+                'property' => $property->fresh(['images', 'ville', 'quartier'])
+            ], 200);
+        }
+
+
+        public function deleteProperty($propertyId){
+            $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
+            $property->delete();
+            return response()->json(['message' => 'Property deleted successfully'], 200);
+        }   
+
+        public function notvalidatedproperties(){
+            $properties = Property::with('images', 'ville', 'quartier')->where('is_validated', false)->get(); 
+            return response()->json(["properties" => $properties]) ; 
+        }
+
+        public function validateProperty($id){
+            $property = Property::findOrFail($id);
+
+            $property->is_validated = true;
+            $property->save();
+
+            return response()->json([
+                'message' => 'Property validated successfully',
+                'property' => $property
+            ]);
+        } 
+
+
+        public function validatedproperties(){
+            $properties = Property::with('images', 'ville', 'quartier')->where('is_validated', true)->get(); 
+            return response()->json(["properties" => $properties]) ;
+        }
 }

@@ -13,5 +13,10 @@ class Ville extends Model
     public function quartiers()
     {
         return $this->hasMany(Quartier::class);
+    } 
+
+    public function properties()
+    {
+        return $this->hasMany(Property::class);
     }
 }

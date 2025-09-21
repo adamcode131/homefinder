@@ -11,5 +11,9 @@ class Quartier extends Model
 
         public function ville(){
         return $this->belongsTo(Ville::class);
-    }
+        }
+
+        public function properties(){
+            return $this->hasMany(Property::class);
+        }
 }
