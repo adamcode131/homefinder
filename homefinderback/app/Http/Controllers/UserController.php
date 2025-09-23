@@ -16,4 +16,19 @@ class UserController extends Controller
         $user = auth()->user();
         return response()->json(['user' => $user]);
     }  
+     
+    public function updateBalance() {
+        $user = auth()->user();
+        $user = User::find($user->id);
+
+        if ($user->balance <= 0) {
+            return response()->json(['message' => 'Not enough points'], 400);
+        }
+
+        $user->balance -= 1;
+        $user->save();
+
+        return response()->json(['user' => $user]);
+    }
+
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
@@ -42,6 +43,10 @@ Route::get('/validatedproperties', [PropertyController::class, 'validatedpropert
 Route::patch('/properties/{id}/validate', [PropertyController::class, 'validateProperty']);
 Route::get('/users', [UserController::class, 'getUsers']); 
 Route::get('/user', [UserController::class, 'getUser'])->middleware("auth:api"); 
+Route::post('/leads', [LeadController::class, 'addLead']) ; 
+Route::get('/all_leads', [LeadController::class, 'getLeads']) ; 
+Route::post('/updateBalance', [UserController::class, 'updateBalance'])->middleware('auth:api') ; 
+Route::post('/leads/{lead}/accept', [LeadController::class, 'acceptLead'])->middleware('auth:api') ; 
 
 
 
