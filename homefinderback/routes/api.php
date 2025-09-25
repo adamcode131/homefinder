@@ -43,12 +43,12 @@ Route::get('/validatedproperties', [PropertyController::class, 'validatedpropert
 Route::patch('/properties/{id}/validate', [PropertyController::class, 'validateProperty']);
 Route::get('/users', [UserController::class, 'getUsers']); 
 Route::get('/user', [UserController::class, 'getUser'])->middleware("auth:api"); 
-Route::post('/leads', [LeadController::class, 'addLead']) ; 
+Route::post('/leads', [LeadController::class, 'addLead'])->middleware('auth:api'); 
 Route::get('/all_leads', [LeadController::class, 'getLeads']) ; 
 Route::post('/updateBalance', [UserController::class, 'updateBalance'])->middleware('auth:api') ; 
 Route::post('/leads/{lead}/accept', [LeadController::class, 'acceptLead'])->middleware('auth:api') ; 
-
-
+Route::post('/details/{propertyId}', [PropertyController::class, 'getDetails']);
+Route::post('/addLead/{propertyId}', [LeadController::class, 'addLeadNonAuth']);
 
 
 // testing

@@ -11,33 +11,49 @@ class LeadController extends Controller
     // 
 public function addLead(Request $request)
 {
-    $propertyIds = $request->input('properties', []); // array of IDs
-
+    $propertyIds = $request->input('properties', []);
+    
     foreach ($propertyIds as $propertyId) {
         $property = Property::findOrFail($propertyId);
-
-        if (auth()->user()) {
+        
+        if (auth()->check()) {
+            // AUTHENTICATED USER - Use database data
+            $user = auth()->user();
+            
             Lead::create([
-                'user_id' => auth()->user()->id,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? null, // Get from user table if exists
                 'property_id' => $propertyId,
                 'owner_id' => $property->owner_id,
                 'status' => 'pending',
                 'date_reservation' => $request->input('date_reservation'),
             ]);
         } else {
+            // UNAUTHENTICATED USER - Use form data
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'nullable|string|max:20',
+                'date_reservation' => 'required|date',
+            ]);
+            
             Lead::create([
+                'user_id' => null,
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
-                'date_reservation' => $request->input('date_reservation'),
                 'property_id' => $propertyId,
                 'owner_id' => $property->owner_id,
+                'status' => 'pending',
+                'date_reservation' => $request->input('date_reservation'),
             ]);
         }
     }
 
     return response()->json(['message' => 'Reservation confirmed successfully'], 200);
-} 
+}
 
 public function getLeads(){
     $leads = Lead::all();
@@ -62,6 +78,28 @@ public function acceptLead(Lead $lead, Request $request)
             'lead' => $lead,
             'user' => $user // optional if you want to return updated points
         ]);
+    } 
+
+    public function addLeadNonAuth(Request $request , $propertyId){ 
+        $property = Property::findOrFail($propertyId);
+            $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'date_reservation' => 'required|date',
+            ]);
+            
+            Lead::create([
+                'user_id' => null,
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'phone' => $request->input('phone'),
+                'property_id' => $propertyId,
+                'owner_id' => $property->owner_id,
+                'status' => 'pending',
+                'date_reservation' => $request->input('date_reservation'),
+            ]);
     }
 }
+
 

@@ -126,7 +126,7 @@ class PropertyController extends Controller
         }
 
         public function validateProperty($id){
-            $property = Property::findOrFail($id);
+            $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($id);
 
             $property->is_validated = true;
             $property->save();
@@ -141,5 +141,11 @@ class PropertyController extends Controller
         public function validatedproperties(){
             $properties = Property::with('images', 'ville', 'quartier')->where('is_validated', true)->get(); 
             return response()->json(["properties" => $properties]) ;
+        } 
+
+
+        public function getDetails($propertyId){
+            $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
+            return response()->json(['property' => $property], 200);
         }
 }
