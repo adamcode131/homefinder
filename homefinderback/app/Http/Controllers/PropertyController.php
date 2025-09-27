@@ -46,8 +46,28 @@ class PropertyController extends Controller
     }
 
     // GET all properties
-    public function getProperties()
+    public function getProperties(Request $request)
     {
+        // new code 
+        $query = Property::with(['ville', 'filterValues.filterOption.filterCategory']);
+
+        if ($request->has('term')) {
+            $term = $request->input('term');
+            $term = strtolower($term);
+            $query->whereRaw('LOWER(name) LIKE ?', ['%' . $term . '%'])
+                ->orWhereRaw('LOWER(description) LIKE ?', ['%' . $term . '%']);
+
+        }
+        if ($request->has('ville_id')) {
+            $villeId = $request->input('ville_id');
+            $query->where('ville_id', $villeId);
+        }   
+        $products = $query->orderByDesc('created_at')->paginate(4);
+
+
+
+
+        // old code 
         $properties = Property::with(['images', 'ville', 'quartier'])->get();
 
         return response()->json([
@@ -56,7 +76,7 @@ class PropertyController extends Controller
     }
 
     // GET single property or UPDATE property
-        public function updateProperty(Request $request, $propertyId)
+    public function updateProperty(Request $request, $propertyId)
         {
             $user = Auth::user();
             $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
@@ -147,5 +167,23 @@ class PropertyController extends Controller
         public function getDetails($propertyId){
             $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
             return response()->json(['property' => $property], 200);
+        } 
+
+
+    /**
+     * Sync filters with product using the generic EntityFilterValue model
+     */
+    private function syncPropertyFilters(Property $property, array $filterIds)
+    {
+        // Remove existing filter associations
+        $property->filterValues()->delete();
+        
+        // Add new filter associations
+        foreach ($filterIds as $filterId) {
+            $property->filterValues()->create([
+                'entity_type' => 'product',
+                'filter_option_id' => $filterId
+            ]);
         }
+    }
 }

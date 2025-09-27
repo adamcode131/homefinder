@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\FilterCategoryController;
+use App\Http\Controllers\Admin\FilterOptionController;
+use App\Http\Controllers\Client\PropertyFilterController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PropertyController;
@@ -42,13 +45,48 @@ Route::get('/notvalidatedproperties', [PropertyController::class, 'notvalidatedp
 Route::get('/validatedproperties', [PropertyController::class, 'validatedproperties']);
 Route::patch('/properties/{id}/validate', [PropertyController::class, 'validateProperty']);
 Route::get('/users', [UserController::class, 'getUsers']); 
-Route::get('/user', [UserController::class, 'getUser'])->middleware("auth:api"); 
+Route::get('/user', [UserController::class, 'getUser'])->middleware("auth:api");
+Route::put('/update_user', [UserController::class, 'updateUser'])->middleware("auth:api");
 Route::post('/leads', [LeadController::class, 'addLead'])->middleware('auth:api'); 
-Route::get('/all_leads', [LeadController::class, 'getLeads']) ; 
+Route::get('/all_leads', [LeadController::class, 'getLeads'])->middleware('auth:api'); 
 Route::post('/updateBalance', [UserController::class, 'updateBalance'])->middleware('auth:api') ; 
 Route::post('/leads/{lead}/accept', [LeadController::class, 'acceptLead'])->middleware('auth:api') ; 
 Route::post('/details/{propertyId}', [PropertyController::class, 'getDetails']);
 Route::post('/addLead/{propertyId}', [LeadController::class, 'addLeadNonAuth']);
+
+
+// routes for filters
+
+Route::middleware('auth:api')->group(function () {
+
+        // Product CRUD API routes
+        Route::apiResource('products', PropertyController::class);
+
+        
+        // Product filters routes
+        Route::get('product-filters', [PropertyFilterController::class, 'getFilters']);
+        Route::get('filter-products', [PropertyFilterController::class, 'filterProducts']);
+        Route::get('product-filters/stats', [PropertyFilterController::class, 'getFilterStats']);
+
+
+        // Admin Filter Management routes
+        Route::prefix('admin')->group(function () {
+            // Filter Categories CRUD
+            Route::apiResource('filter-categories', FilterCategoryController::class);
+            
+            
+            // Filter Options CRUD  
+            Route::apiResource('filter-options', FilterOptionController::class);
+            Route::get('filter-options/category/{categoryId}', [FilterOptionController::class, 'getByCategory']);
+        });
+
+
+});
+
+
+
+
+
 
 
 // testing
