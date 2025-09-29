@@ -25,10 +25,10 @@ class FilterOption extends Model
         return $this->belongsTo(FilterCategory::class, 'filter_category_id');
     }
 
-    public function Property()
+    public function properties()
     {
         return $this->belongsToMany(Property::class, 'entity_filter_values', 'filter_option_id', 'entity_id')
-            ->where('entity_filter_values.entity_type', 'product');
+            ->where('entity_filter_values.entity_type', Property::class);
     }
 
     /**
@@ -37,6 +37,6 @@ class FilterOption extends Model
     public function systems()
     {
         return $this->belongsToMany(System::class, 'entity_filter_values', 'filter_option_id', 'entity_id')
-            ->where('entity_filter_values.entity_type', 'system');
+            ->where('entity_filter_values.entity_type', System::class);
     }
-}
+}   

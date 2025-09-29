@@ -29,7 +29,7 @@ class EntityFilterValue extends Model
      */
     public function entity()
     {
-        return $this->morphTo('entity', 'entity_type', 'entity_id');
+        return $this->morphTo(null, 'entity_type', 'entity_id');
     }
 
     /**

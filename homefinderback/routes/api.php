@@ -88,7 +88,3 @@ Route::middleware('auth:api')->group(function () {
 
 
 
-
-// testing
-Route::post('/createUser',[TestController::class,'signup']) ;  
-Route::post('/logintest',[TestController::class,'login']) ;  

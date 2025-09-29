@@ -6,20 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    public function up()
-    {
+    public function up(): void
     {
         // Table des catégories de filtres
         Schema::create('filter_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug',191)->unique();
             $table->string('type')->default('checkbox');
+            $table->json('entity_types')->nullable(); // 👈 supports multiple entities
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
@@ -30,32 +25,27 @@ return new class extends Migration
             $table->id();
             $table->foreignId('filter_category_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('slug');
+            $table->string('slug',191);
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
 
-        // Table de relation produits-filtres
-        Schema::create('property_filter_values', function (Blueprint $table) {
+        // Table polymorphe de relation entités-filtres
+        Schema::create('entity_filter_values', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('property_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('entity_id'); // e.g. property_id or system_id
+            $table->string('entity_type');           // App\Models\Property, App\Models\System, etc.
             $table->foreignId('filter_option_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
-            $table->unique(['property_id', 'filter_option_id']);
+
+            $table->index(['entity_id', 'entity_type']);
         });
     }
-    }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('property_filter_values');
+        Schema::dropIfExists('entity_filter_values');
         Schema::dropIfExists('filter_options');
         Schema::dropIfExists('filter_categories');
     }

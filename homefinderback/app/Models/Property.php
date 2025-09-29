@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Property extends Model
 {
@@ -23,7 +25,7 @@ class Property extends Model
 
 
     public function getFormattedPriceAttribute(){
-            return $this->purpose === 'rent'
+            return $this->intention === 'loyer'
             ? $this->rent_price . ' dh / month'
             : $this->sale_price . ' dh';
     } 
@@ -36,7 +38,7 @@ class Property extends Model
     public function lead(){
         return $this->hasMany(Lead::class);
     }
-
+    
     public function images()
     {
         return $this->hasMany(Image::class);
@@ -50,4 +52,42 @@ class Property extends Model
         return $this->belongsTo(Quartier::class);
     }
 
+    
+    // filter config 
+
+    
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
+    }
+
+    public function getIsNewAttribute()
+    {
+        return $this->created_at->diffInDays(now()) <= 30; // Product is new if created within the last 30 days
+    }
+
+    public function getAttachmentUrlAttribute()
+    {
+        return $this->attachment ? asset('storage/' . $this->attachment) : null;
+    }
+
+    public function sector()
+    {
+        return $this->belongsTo(Ville::class);
+    }
+
+
+    public function filterValues(): HasMany
+    {
+        return $this->hasMany(EntityFilterValue::class, 'entity_id')
+            ->where('entity_type', self::class);
+    }
+
+    
+    public function filterOptions(): BelongsToMany
+    {
+        return $this->belongsToMany(FilterOption::class, 'entity_filter_values', 'entity_id', 'filter_option_id')
+            ->where('entity_filter_values.entity_type', self::class)
+            ->withTimestamps();
+    }
 }

@@ -15,7 +15,7 @@ class TestController extends Controller
             'password' => $request->input("password") ,
         ]) ; 
 
-        $token = $user->createToken('token')->accessToken ; 
+        $token = $user->createToken('token')->accessToken ;
         return response()->json([
             'token'=>$token
         ]) ; 

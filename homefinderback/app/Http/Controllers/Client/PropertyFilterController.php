@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class PropertyFilterController extends Controller
 {
-        public function getFilters()
+    public function getFilters()
     {
         $filters = FilterCategory::forEntityType('Property')
             ->with('activeOptions')
