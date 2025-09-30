@@ -57,7 +57,7 @@ public function addLead(Request $request)
 
 public function getLeads(){
     $user = auth()->user();
-    $leads = Lead::where('user_id', $user->id)
+    $leads = Lead::where('owner_id', $user->id)
     ->with('property')
     ->get();
     return response()->json(['leads' => $leads]);

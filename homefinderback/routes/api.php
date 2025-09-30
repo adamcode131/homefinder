@@ -78,7 +78,7 @@ Route::middleware('auth:api')->group(function () {
             // Filter Options CRUD  
             Route::apiResource('filter-options', FilterOptionController::class);
             Route::get('filter-options/category/{categoryId}', [FilterOptionController::class, 'getByCategory']);
-        });
+        })->middleware('auth:api') ; 
 
 
 });

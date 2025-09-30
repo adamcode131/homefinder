@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EntityFilterValue;
 use App\Models\Image;
 use App\Models\Property;
 use Illuminate\Http\Request;
@@ -36,8 +37,20 @@ class PropertyController extends Controller
                     'url'         => $path,
                     'property_id' => $property->id,
                 ]);
-            }
+            } 
+        }  
+        if ($request->has('filters')) {
+            foreach ($request->filters as $categoryId => $optionId) {
+                EntityFilterValue::insert([
+                    'entity_id' => $property->id,           // property ID
+                    'entity_type' => Property::class,       // App\Models\Property
+                    'filter_option_id' => $optionId,        // the selected option
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }   
         }
+
 
         return response()->json([
             'message'  => 'Property created successfully',
