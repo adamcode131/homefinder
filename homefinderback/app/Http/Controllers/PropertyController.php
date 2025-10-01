@@ -38,7 +38,7 @@ class PropertyController extends Controller
                     'property_id' => $property->id,
                 ]);
             } 
-        }  
+        }
         if ($request->has('filters')) {
             foreach ($request->filters as $categoryId => $optionId) {
                 EntityFilterValue::insert([

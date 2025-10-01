@@ -74,7 +74,11 @@ public function acceptLead(Lead $lead, Request $request)
         }
 
         $lead->status = 'accepted';
-        $lead->save();
+        $lead->save(); 
+        // reduce the user points by 1
+        $user->balance -= 1;
+        $user->save();
+
 
         return response()->json([
             'message' => 'Lead accepted successfully',
