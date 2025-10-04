@@ -34,6 +34,7 @@ Route::middleware('auth:api')->get('/verify-token', [LoginController::class, 've
 Route::middleware('auth:api')->post('/logout', [LoginController::class, 'logout']); 
 Route::get('/villes', [VilleController::class, 'getVilles']); 
 Route::get('/villes/{villeid}/quartiers', [VilleController::class, 'getQuartiersByVille']); 
+Route::get('/ville/{ville}/{quartier?}', [VilleController::class, 'searchVilleEtQuartier']); // n8n
 Route::middleware('auth:api')->post('/storeProperties', [PropertyController::class, 'storeProperties']);
 Route::get('/properties', [PropertyController::class, 'getProperties']);
 Route::get('/updateproperty/{propertyId}', [PropertyController::class, 'updateProperty'])->middleware('auth:api');
@@ -59,14 +60,14 @@ Route::post('/addLead/{propertyId}', [LeadController::class, 'addLeadNonAuth']);
 
 Route::middleware('auth:api')->group(function () {
 
-        // Product CRUD API routes
-        Route::apiResource('products', PropertyController::class);
+        // property CRUD API routes
+        // Route::apiResource('properties', PropertyController::class);
 
         
-        // Product filters routes
-        Route::get('product-filters', [PropertyFilterController::class, 'getFilters']);
-        Route::get('filter-products', [PropertyFilterController::class, 'filterProducts']);
-        Route::get('product-filters/stats', [PropertyFilterController::class, 'getFilterStats']);
+        // property filters routes
+        Route::get('property-filters', [PropertyFilterController::class, 'getFilters']);
+        Route::post('filter-properties', [PropertyFilterController::class, 'filterProperties']);
+        Route::get('property-filters/stats', [PropertyFilterController::class, 'getFilterStats']);
 
 
         // Admin Filter Management routes

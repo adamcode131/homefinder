@@ -9,18 +9,22 @@ use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator; // ✅ Added
+use Illuminate\Pagination\Paginator;            // ✅ Added
 
 class PropertyFilterController extends Controller
 {
     public function getFilters()
     {
-        $filters = FilterCategory::forEntityType('Property')
-            ->with('activeOptions')
+        $filters = FilterCategory::
+            // ::forEntityType('App\Models\Property')
+            with('activeOptions')
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->get();
 
-            Log::info($filters);
+        Log::info($filters);
+
         return response()->json([
             'filters' => $filters
         ]);
@@ -28,92 +32,89 @@ class PropertyFilterController extends Controller
 
     public function filterProperties(Request $request)
     {
-       
-        $query = Property::with(['sector', 'filterValues.filterOption.filterCategory']);
-
-        // Appliquer les filtres
+        $query = Property::with(['ville', 'filterValues.filterOption.filterCategory']);
+    
         if ($request->has('filters') && !empty($request->filters)) {
             $filterIds = $request->filters;
-            
-            // Ensure filters is an array
+    
             if (is_string($filterIds)) {
-                $filterIds = explode(',', $filterIds);
+                $filterIds = json_decode($filterIds, true);
             }
-            
-            if (!is_array($filterIds)) {
-                return response()->json(['error' => 'Invalid filters format'], 400);
-            }
-            
-            // Convert string IDs to integers and filter out invalid ones
-            $filterIds = array_filter(array_map('intval', $filterIds), function($id) {
-                return $id > 0;
-            });
-            
-            if (!empty($filterIds)) {
-                // Récupérer toutes les options de filtre en une seule requête
-                $filterOptions = FilterOption::with('filterCategory')->whereIn('id', $filterIds)->get();
-                
-                // Grouper les filtres par catégorie pour un filtrage AND entre catégories
-                $filtersByCategory = [];
-                foreach ($filterOptions as $filterOption) {
-                    $filtersByCategory[$filterOption->filterCategory->id][] = $filterOption->id;
-                }
-
-                // Appliquer les filtres (AND entre catégories, OR dans la même catégorie)
-                foreach ($filtersByCategory as $categoryId => $categoryFilters) {
-                    $query->whereHas('filterValues', function ($q) use ($categoryFilters) {
-                        $q->whereIn('filter_option_id', $categoryFilters);
-                    });
-                }
+    
+            if (is_array($filterIds)) {
+                $query->whereHas('filterValues', function ($q) use ($filterIds) {
+                    $q->whereIn('filter_option_id', $filterIds);
+                });
             }
         }
-
-        // Recherche par nom (case-insensitive, driver aware)
+    
         if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
+            $search = trim($request->search);
+    
+            // Detect numeric price ranges (e.g. 1000 à 2000)
+            preg_match_all('/\d+/', $search, $matches);
+            $numbers = $matches[0] ?? [];
+            
+            $minPrice = null;
+            $maxPrice = null;
+    
+            if (count($numbers) === 1) {
+                $minPrice = (int)$numbers[0];
+            } elseif (count($numbers) >= 2) {
+                $minPrice = (int)$numbers[0];
+                $maxPrice = (int)$numbers[1];
+            }
+    
+            // Detect type (à louer / à vendre)
+            $type = null;
+            if (preg_match('/louer/i', $search)) {
+                $type = 'rent';
+            } elseif (preg_match('/vendre|vente/i', $search)) {
+                $type = 'sale';
+            }
+    
+            // Apply title search
             $driver = DB::getDriverName();
             $query->where(function ($q) use ($search, $driver) {
                 if ($driver === 'pgsql') {
-                    $q->where('name', 'ILIKE', "%{$search}%");
+                    $q->where('title', '=', $search)
+                      ->orWhere('title', 'ILIKE', "%{$search}%");
                 } else {
-                    $lower = mb_strtolower($search);
-                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$lower}%"]);
+                    $lowerSearch = mb_strtolower($search);
+                    $q->whereRaw('LOWER(title) = ?', [$lowerSearch])
+                      ->orWhereRaw('LOWER(title) LIKE ?', ["%{$lowerSearch}%"]);
                 }
             });
+    
+            // Apply price filters if found
+            if ($minPrice !== null) {
+                $query->where('price', '>=', $minPrice);
+            }
+            if ($maxPrice !== null) {
+                $query->where('price', '<=', $maxPrice);
+            }
+    
+            // Apply type filter if found
+            if ($type) {
+                $query->where('type', $type); // Make sure your DB has a 'type' column ('rent' or 'sale')
+            }
         }
-
-        // Filtrage par secteur
-        if ($request->has('sector_id') && !empty($request->sector_id)) {
-            $query->where('sector_id', $request->sector_id);
-        }
-
-        // Filtrage par statut online
-        if ($request->has('online')) {
-            $query->where('online', $request->boolean('online'));
-        }
-
-        // Pagination
-        $Properties = $query->paginate(20);
-
-        // Ajouter les filtres appliqués à chaque produit
-        $Properties->getCollection()->transform(function ($Property) {
-            $Property->applied_filters = $Property->filterValues()->with('filterOption.filterCategory')->get()->groupBy('filterOption.filterCategory.name');
-            return $Property;
-        });
-
+    
+        $Properties = $query->get();
+    
         return response()->json($Properties);
     }
+    
+    
 
     public function getFilterStats(Request $request)
     {
-        // Récupérer les filtres actuellement sélectionnés
         $selectedFilters = $request->get('filters', []);
         if (is_string($selectedFilters)) {
             $selectedFilters = explode(',', $selectedFilters);
         }
         $selectedFilters = array_filter(array_map('intval', $selectedFilters));
 
-        // Grouper les filtres sélectionnés par catégorie
         $selectedFiltersByCategory = [];
         if (!empty($selectedFilters)) {
             $filterOptions = FilterOption::with('filterCategory')->whereIn('id', $selectedFilters)->get();
@@ -122,20 +123,16 @@ class PropertyFilterController extends Controller
             }
         }
 
-        // Récupérer toutes les catégories avec leurs options pour les produits uniquement
         $categories = FilterCategory::forEntityType('Property')
             ->with('activeOptions')
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->get();
 
-        // Pour chaque catégorie et option, calculer le nombre de produits
         foreach ($categories as $category) {
             foreach ($category->activeOptions as $option) {
-                // Construire une requête de base
                 $query = Property::query();
 
-                // Appliquer les filtres des autres catégories (pas la catégorie actuelle)
                 foreach ($selectedFiltersByCategory as $catId => $filterIds) {
                     if ($catId != $category->id) {
                         $query->whereHas('filterValues', function ($q) use ($filterIds) {
@@ -144,12 +141,10 @@ class PropertyFilterController extends Controller
                     }
                 }
 
-                // Ajouter ce filtre spécifique pour compter
                 $query->whereHas('filterValues', function ($q) use ($option) {
                     $q->where('filter_option_id', $option->id);
                 });
 
-                // Appliquer la recherche si fournie (case-insensitive, driver aware)
                 if ($request->has('search') && !empty($request->search)) {
                     $search = $request->search;
                     $driver = DB::getDriverName();

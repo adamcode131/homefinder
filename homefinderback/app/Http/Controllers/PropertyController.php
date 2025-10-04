@@ -17,6 +17,19 @@ class PropertyController extends Controller
         $rentPrice = $request->input('intention') === 'loyer' ? $request->input('rent_price') : 0;
         $salePrice = $request->input('intention') === 'vente' ? $request->input('sale_price') : 0;
 
+        $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'required|string',
+            'intention'   => 'required|in:vente,loyer',
+            'type'        => 'required|in:Appartement,Villa,Maison,Studio,Duplex,Terrain,Bureau,Local Commercial,Chambre',
+            'ville_id'    => 'required|exists:villes,id',
+            'quartier_id' => 'required|exists:quartiers,id',    
+            'rent_price'  => 'required_if:intention,loyer|numeric',
+            'sale_price'  => 'required_if:intention,vente|numeric',        
+            'images'      => 'required|array',    
+            'images.*'    => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]) ;  
+
         $property = Property::create([
             'title'       => $request->input('title'),
             'description' => $request->input('description'),
