@@ -9,8 +9,6 @@ use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Pagination\LengthAwarePaginator; // ✅ Added
-use Illuminate\Pagination\Paginator;            // ✅ Added
 
 class PropertyFilterController extends Controller
 {
@@ -34,6 +32,7 @@ class PropertyFilterController extends Controller
     {
         $query = Property::with(['ville', 'filterValues.filterOption.filterCategory']);
     
+        // Apply filter options (existing logic)
         if ($request->has('filters') && !empty($request->filters)) {
             $filterIds = $request->filters;
     
@@ -50,8 +49,9 @@ class PropertyFilterController extends Controller
     
         if ($request->has('search') && !empty($request->search)) {
             $search = trim($request->search);
+            $searchLower = mb_strtolower($search);
     
-            // Detect numeric price ranges (e.g. 1000 à 2000)
+            // 1. Detect and apply PRICE filters
             preg_match_all('/\d+/', $search, $matches);
             $numbers = $matches[0] ?? [];
             
@@ -65,28 +65,6 @@ class PropertyFilterController extends Controller
                 $maxPrice = (int)$numbers[1];
             }
     
-            // Detect type (à louer / à vendre)
-            $type = null;
-            if (preg_match('/louer/i', $search)) {
-                $type = 'rent';
-            } elseif (preg_match('/vendre|vente/i', $search)) {
-                $type = 'sale';
-            }
-    
-            // Apply title search
-            $driver = DB::getDriverName();
-            $query->where(function ($q) use ($search, $driver) {
-                if ($driver === 'pgsql') {
-                    $q->where('title', '=', $search)
-                      ->orWhere('title', 'ILIKE', "%{$search}%");
-                } else {
-                    $lowerSearch = mb_strtolower($search);
-                    $q->whereRaw('LOWER(title) = ?', [$lowerSearch])
-                      ->orWhereRaw('LOWER(title) LIKE ?', ["%{$lowerSearch}%"]);
-                }
-            });
-    
-            // Apply price filters if found
             if ($minPrice !== null) {
                 $query->where('price', '>=', $minPrice);
             }
@@ -94,9 +72,55 @@ class PropertyFilterController extends Controller
                 $query->where('price', '<=', $maxPrice);
             }
     
-            // Apply type filter if found
-            if ($type) {
-                $query->where('type', $type); // Make sure your DB has a 'type' column ('rent' or 'sale')
+            // 2. Detect and apply TYPE filter
+            if (preg_match('/louer/i', $search)) {
+                $query->where('type', 'rent');
+            } elseif (preg_match('/vendre|vente/i', $search)) {
+                $query->where('type', 'sale');
+            }
+    
+            // 3. Detect and apply SUPERFICIE filter - UPDATED REGEX
+            if (preg_match('/(\d+)\s*(?:m²|m2|m\s*²|metre|mètre|surface|taille|espace)/i', $search, $superficieMatch)) {
+                $superficie = (int) $superficieMatch[1];
+    
+    
+                if (str_contains($searchLower, 'moins')) {
+                    $query->whereNotNull('superficie')
+                        ->where('superficie', '<=', $superficie);
+                } elseif (str_contains($searchLower, 'plus')) {
+                    $query->whereNotNull('superficie')
+                        ->where('superficie', '>=', $superficie);
+                } elseif (preg_match('/entre\s+(\d+)\s*(?:m|m²)?\s+et\s+(\d+)\s*(?:m|m²)?/i', $search, $betweenMatch)) {
+                    $min = (int) $betweenMatch[1];
+                    $max = (int) $betweenMatch[2];
+                    $query->whereNotNull('superficie')
+                        ->whereBetween('superficie', [$min, $max]);
+                } else {
+                    // Exact or approximate match (you can add tolerance here)
+                    $query->where('superficie', '>=', $superficie - 10)
+                          ->where('superficie', '<=', $superficie + 10);
+                }
+            }
+    
+            // 4. Extract property type keywords for title search
+            // Remove numbers, price indicators, and measurements
+            $titleSearch = preg_replace('/\d+\s*(?:dh|mad|dirham|m|m²|metre|mètre)?/i', '', $search);
+            $titleSearch = preg_replace('/\bentre\b|\bet\b|à\s*louer|à\s*vendre/i', '', $titleSearch);
+            $titleSearch = trim($titleSearch);
+    
+            // Only search title if there's meaningful text left
+            if (!empty($titleSearch) && strlen($titleSearch) > 2) {
+                $driver = DB::getDriverName();
+                $query->where(function ($q) use ($titleSearch, $driver) {
+                    if ($driver === 'pgsql') {
+                        $q->where('title', '=', $titleSearch)
+                          ->orWhere('title', 'ILIKE', "%{$titleSearch}%");
+                    } else {
+                        $lowerTitleSearch = mb_strtolower($titleSearch);
+                        $q->whereRaw('LOWER(title) = ?', [$lowerTitleSearch])
+                          ->orWhereRaw('LOWER(title) LIKE ?', ["%{$lowerTitleSearch}%"]);
+                    }
+                });
             }
         }
     
