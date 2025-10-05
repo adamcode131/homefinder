@@ -27,7 +27,7 @@ class PropertyController extends Controller
             'rent_price'  => 'required_if:intention,loyer|numeric',
             'sale_price'  => 'required_if:intention,vente|numeric',        
             'images'      => 'required|array',    
-            'images.*'    => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*'    => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]) ;  
 
         $property = Property::create([
