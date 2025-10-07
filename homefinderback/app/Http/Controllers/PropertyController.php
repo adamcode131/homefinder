@@ -190,10 +190,23 @@ class PropertyController extends Controller
         } 
 
 
+        public function getResult(Request $request){
+            // Retrieve IDs from request
+            $propertyIds = $request->input('propertyIds', []);
+
+            // Fetch properties with related data
+            $properties = Property::with(['images', 'ville', 'quartier'])
+                ->whereIn('id', $propertyIds)
+                ->get();
+
+            return response()->json(['properties' => $properties], 200);
+        } 
+
         public function getDetails($propertyId){
             $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
             return response()->json(['property' => $property], 200);
         } 
+
 
 
     /**
@@ -211,5 +224,18 @@ class PropertyController extends Controller
                 'filter_option_id' => $filterId
             ]);
         }
+    } 
+
+
+    public function getN8NProperties(Request $request)
+    {
+        $ids = $request->input('ids', []); // get the array from the body
+
+        $properties = Property::whereIn('id', $ids)
+            ->with(['images', 'ville', 'quartier'])
+            ->get();
+
+        return response()->json($properties);
     }
+
 }

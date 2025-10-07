@@ -32,6 +32,9 @@ class PropertyFilterController extends Controller
     {
         $query = Property::with(['ville', 'filterValues.filterOption.filterCategory']);
     
+        Log::info('dd request');
+        Log::info($request->all());
+
         // Apply filter options (existing logic)
         if ($request->has('filters') && !empty($request->filters)) {
             $filterIds = $request->filters;
@@ -124,7 +127,7 @@ class PropertyFilterController extends Controller
             }
         }
     
-        $Properties = $query->get();
+        $Properties = $query->paginate(20);
     
         return response()->json($Properties);
     }

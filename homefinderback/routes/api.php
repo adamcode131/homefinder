@@ -9,7 +9,7 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VilleController;
 use App\Http\Controllers\TestController;
-
+use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -52,8 +52,12 @@ Route::post('/leads', [LeadController::class, 'addLead'])->middleware('auth:api'
 Route::get('/all_leads', [LeadController::class, 'getLeads'])->middleware('auth:api'); 
 Route::post('/updateBalance', [UserController::class, 'updateBalance'])->middleware('auth:api') ; 
 Route::post('/leads/{lead}/accept', [LeadController::class, 'acceptLead'])->middleware('auth:api') ; 
+Route::post('/result', [PropertyController::class, 'getResult']);
 Route::post('/details/{propertyId}', [PropertyController::class, 'getDetails']);
+
 Route::post('/addLead/{propertyId}', [LeadController::class, 'addLeadNonAuth']);
+
+// Route::post('/result', [PropertyController::class, 'getN8NProperties']); // get filtered properties from n8n
 
 
 // routes for filters
