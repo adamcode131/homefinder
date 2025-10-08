@@ -21,7 +21,6 @@ class PropertyController extends Controller
             'title'       => 'required|string|max:255',
             'description' => 'required|string',
             'intention'   => 'required|in:vente,loyer',
-            'type'        => 'required|in:Appartement,Villa,Maison,Studio,Duplex,Terrain,Bureau,Local Commercial,Chambre',
             'ville_id'    => 'required|exists:villes,id',
             'quartier_id' => 'required|exists:quartiers,id',    
             'rent_price'  => 'required_if:intention,loyer|numeric',
@@ -34,7 +33,6 @@ class PropertyController extends Controller
             'title'       => $request->input('title'),
             'description' => $request->input('description'),
             'intention'   => $request->input('intention'),
-            'type'        => $request->input('type'),
             'ville_id'    => $request->input('ville_id'),
             'quartier_id' => $request->input('quartier_id'),
             'rent_price'  => $rentPrice,
@@ -202,10 +200,15 @@ class PropertyController extends Controller
             return response()->json(['properties' => $properties], 200);
         } 
 
-        public function getDetails($propertyId){
-            $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
-            return response()->json(['property' => $property], 200);
-        } 
+        public function getBySlug($slug)
+        {
+            $property = Property::with(['images', 'ville', 'quartier','filterValues' ,'filterOptions'])
+                ->where('slug', $slug)
+                ->firstOrFail();
+
+            return response()->json(['property' => $property]);
+        }
+
 
 
 

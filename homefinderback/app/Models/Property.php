@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Property extends Model
 {
@@ -86,5 +87,40 @@ class Property extends Model
         return $this->belongsToMany(FilterOption::class, 'entity_filter_values', 'entity_id', 'filter_option_id')
             ->where('entity_filter_values.entity_type', self::class)
             ->withTimestamps();
+    }  
+    
+
+    // for slug 
+
+        protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($property) {
+            $property->slug = self::generateUniqueSlug($property->title);
+        });
+
+        static::updating(function ($property) {
+            if ($property->isDirty('title')) {
+                $property->slug = self::generateUniqueSlug($property->title);
+            }
+        });
     }
+
+    // ✅ Helper method to make slug unique
+    protected static function generateUniqueSlug($title)
+    {
+        $slug = Str::slug($title);
+        $originalSlug = $slug;
+        $count = 1;
+
+        while (self::where('slug', $slug)->exists()) {
+            $slug = "{$originalSlug}-{$count}";
+            $count++;
+        }
+
+        return $slug;
+    }
+
+
 }

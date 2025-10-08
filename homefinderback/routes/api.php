@@ -53,7 +53,7 @@ Route::get('/all_leads', [LeadController::class, 'getLeads'])->middleware('auth:
 Route::post('/updateBalance', [UserController::class, 'updateBalance'])->middleware('auth:api') ; 
 Route::post('/leads/{lead}/accept', [LeadController::class, 'acceptLead'])->middleware('auth:api') ; 
 Route::post('/result', [PropertyController::class, 'getResult']);
-Route::post('/details/{propertyId}', [PropertyController::class, 'getDetails']);
+Route::post('/details/{slug}', [PropertyController::class, 'getBySlug']);
 
 Route::post('/addLead/{propertyId}', [LeadController::class, 'addLeadNonAuth']);
 

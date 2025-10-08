@@ -11,21 +11,22 @@ class LeadController extends Controller
     // 
 public function addLead(Request $request)
 {
-    $propertyIds = $request->input('properties', []);
-    
-    foreach ($propertyIds as $propertyId) {
-        $property = Property::findOrFail($propertyId);
-        
+    $propertySlugs = $request->input('properties', []);
+
+    foreach ($propertySlugs as $slug) {
+        // Find property by slug instead of ID
+        $property = Property::where('slug', $slug)->firstOrFail();
+
         if (auth()->check()) {
             // AUTHENTICATED USER - Use database data
             $user = auth()->user();
-            
+
             Lead::create([
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'phone' => $user->phone ?? null, // Get from user table if exists
-                'property_id' => $propertyId,
+                'phone' => $user->phone ?? null,
+                'property_id' => $property->id, // use the property ID internally
                 'owner_id' => $property->owner_id,
                 'status' => 'pending',
                 'date_reservation' => $request->input('date_reservation'),
@@ -38,13 +39,13 @@ public function addLead(Request $request)
                 'phone' => 'nullable|string|max:20',
                 'date_reservation' => 'required|date',
             ]);
-            
+
             Lead::create([
                 'user_id' => null,
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
-                'property_id' => $propertyId,
+                'property_id' => $property->id, // still store the ID
                 'owner_id' => $property->owner_id,
                 'status' => 'pending',
                 'date_reservation' => $request->input('date_reservation'),
@@ -55,11 +56,10 @@ public function addLead(Request $request)
     return response()->json(['message' => 'Reservation confirmed successfully'], 200);
 }
 
+
 public function getLeads(){
     $user = auth()->user();
-    $leads = Lead::where('owner_id', $user->id)
-    ->with('property')
-    ->get();
+    $leads = Lead::with('property')->where('user_id', $user->id)->get();
     return response()->json(['leads' => $leads]);
     
 } 
