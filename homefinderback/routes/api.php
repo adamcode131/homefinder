@@ -6,10 +6,12 @@ use App\Http\Controllers\Client\PropertyFilterController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\RefundController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VilleController;
 use App\Http\Controllers\TestController;
 use App\Models\Property;
+use App\Models\Refund;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -49,17 +51,17 @@ Route::get('/users', [UserController::class, 'getUsers']);
 Route::get('/user', [UserController::class, 'getUser'])->middleware("auth:api");
 Route::put('/update_user', [UserController::class, 'updateUser'])->middleware("auth:api");
 Route::post('/leads', [LeadController::class, 'addLead'])->middleware('auth:api'); 
-Route::get('/all_leads', [LeadController::class, 'getLeads'])->middleware('auth:api'); 
+Route::get('/all_leads', [LeadController::class, 'getLeads'])->middleware('auth:api'); // this one for admin
+Route::get('/all_leads', [LeadController::class, 'getAllLeads'])->middleware('auth:api'); // this one for owner
 Route::post('/updateBalance', [UserController::class, 'updateBalance'])->middleware('auth:api') ; 
 Route::post('/leads/{lead}/accept', [LeadController::class, 'acceptLead'])->middleware('auth:api') ; 
 Route::post('/result', [PropertyController::class, 'getResult']);
 Route::post('/details/{slug}', [PropertyController::class, 'getBySlug']);
-
 Route::post('/addLead/{propertyId}', [LeadController::class, 'addLeadNonAuth']);
-
-// Route::post('/result', [PropertyController::class, 'getN8NProperties']); // get filtered properties from n8n
-
-
+Route::post('/refund/{leadId}' , [RefundController::class , 'addRefund']);
+Route::get('/refund-reasons' , [RefundController::class , 'getReasons']);
+Route::get('/all-refunds' , [RefundController::class , 'getAllRefunds']);
+Route::post('/accept-refund/{refundId}' , [RefundController::class , 'acceptRefund']);
 // routes for filters
 
 Route::middleware('auth:api')->group(function () {

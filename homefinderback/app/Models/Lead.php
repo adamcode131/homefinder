@@ -21,5 +21,13 @@ class Lead extends Model
     ];
     public function property(){
         return $this->belongsTo(Property::class);
+    } 
+
+    public function Refunds(){
+        return $this->hasMany(Refund::class);
+    } 
+
+    public function owner(){
+        return $this->belongsTo(User::class , 'owner_id')->where('role', 'owner');
     }
 }

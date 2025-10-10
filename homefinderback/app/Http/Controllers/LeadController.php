@@ -62,7 +62,13 @@ public function getLeads(){
     $leads = Lead::with('property')->where('user_id', $user->id)->get();
     return response()->json(['leads' => $leads]);
     
-} 
+}  
+
+public function getAllLeads(){
+    $owner = auth()->user();
+    $leads = Lead::with('property')->where('owner_id', $owner->id)->get();
+    return response()->json(['leads' => $leads]);
+}
 
 public function acceptLead(Lead $lead, Request $request)
     {
