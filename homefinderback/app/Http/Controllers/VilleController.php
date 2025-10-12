@@ -27,7 +27,7 @@ class VilleController extends Controller
     } 
 
 
-    public function searchVilleEtQuartier($ville, $quartier = null)
+    public function getVilleAndQuartier($ville, $quartier = null)
     {
         if ($ville && $quartier) {
             // Case: both ville and quartier provided

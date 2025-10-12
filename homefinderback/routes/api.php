@@ -36,7 +36,7 @@ Route::middleware('auth:api')->get('/verify-token', [LoginController::class, 've
 Route::middleware('auth:api')->post('/logout', [LoginController::class, 'logout']); 
 Route::get('/villes', [VilleController::class, 'getVilles']); 
 Route::get('/villes/{villeid}/quartiers', [VilleController::class, 'getQuartiersByVille']); 
-Route::get('/ville/{ville}/{quartier?}', [VilleController::class, 'searchVilleEtQuartier']); // n8n
+Route::get('/ville/{ville}/{quartier?}', [VilleController::class, 'getVilleAndQuartier']); // n8n
 Route::middleware('auth:api')->post('/storeProperties', [PropertyController::class, 'storeProperties']);
 Route::get('/properties', [PropertyController::class, 'getProperties']);
 Route::get('/updateproperty/{propertyId}', [PropertyController::class, 'updateProperty'])->middleware('auth:api');
