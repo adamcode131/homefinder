@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\FilterCategory;
 use App\Models\FilterOption;
 use App\Models\Property;
+use App\Models\Quartier;
+use App\Models\Ville;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -194,6 +196,18 @@ public function filterProperties(Request $request)
             Log::info('Applied filter IDs: ', $filterIds);
         }
     }
+    if($request->has("location" && !empty($request->location))){
+        $ville = Ville::where('name', 'like', '%' . $request->location . '%')->first();
+        if($ville)
+           $query =  $query->where('ville_id', $ville->id);
+        else
+        {
+            $quartier = Quartier::where('name', 'like', '%' . $request->location . '%')->first();
+            if($quartier)
+                $query =  $query->where('quartier_id', $quartier->id);
+        
+        }
+    }
 
     // FIX: Check both request parameters AND parsed filters data for ville
     $villeName = null;
@@ -205,7 +219,7 @@ public function filterProperties(Request $request)
 
     if ($villeName) {
         Log::info('Applying ville filter: ' . $villeName);
-        $query->whereHas('ville', function ($q) use ($villeName) {
+       $query = $query->whereHas('ville', function ($q) use ($villeName) {
             $q->where(DB::raw('LOWER(name)'), '=', mb_strtolower($villeName));
         });
         Log::info('Ville filter applied');
@@ -223,7 +237,7 @@ public function filterProperties(Request $request)
 
     if ($quartierName) {
         Log::info('Applying quartier filter: ' . $quartierName);
-        $query->whereHas('quartier', function ($q) use ($quartierName) {
+        $query =$query->whereHas('quartier', function ($q) use ($quartierName) {
             $q->where(DB::raw('LOWER(name)'), '=', mb_strtolower($quartierName));
         });
         Log::info('Quartier filter applied');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Quartier;
 use App\Models\Ville;
 use Illuminate\Http\Request;
 
@@ -27,8 +28,23 @@ class VilleController extends Controller
     } 
 
 
-    public function getVilleAndQuartier($ville, $quartier = null)
+    public function getVilleAndQuartier(Request $request)
     {
+
+        $term = isset($request->term) ? $request->term : trim($request->term);
+        $quartier = Quartier::where('name', 'like', '%' . $term . '%')->first();
+        if($quartier)
+            return response()->json(['quartier' => $quartier]);
+        else
+        {
+            $ville = Ville::where('name', 'like', '%' . $term . '%')->first();
+                if($ville)
+                    return response()->json(['ville' => $ville]);
+        }
+           
+        return response()->json(['message' => 'Ville not found'], 404);
+
+
         if ($ville && $quartier) {
             // Case: both ville and quartier provided
             $villeData = Ville::where('name', $ville)

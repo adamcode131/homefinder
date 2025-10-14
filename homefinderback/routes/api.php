@@ -7,6 +7,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RefundController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VilleController;
 use App\Http\Controllers\TestController;
@@ -37,6 +38,7 @@ Route::middleware('auth:api')->post('/logout', [LoginController::class, 'logout'
 Route::get('/villes', [VilleController::class, 'getVilles']); 
 Route::get('/villes/{villeid}/quartiers', [VilleController::class, 'getQuartiersByVille']); 
 Route::get('/ville/{ville}/{quartier?}', [VilleController::class, 'getVilleAndQuartier']); // n8n
+Route::get('/research-cities', [VilleController::class, 'getVilleAndQuartier']); // n8n
 Route::middleware('auth:api')->post('/storeProperties', [PropertyController::class, 'storeProperties']);
 Route::get('/properties', [PropertyController::class, 'getProperties']);
 Route::get('/updateproperty/{propertyId}', [PropertyController::class, 'updateProperty'])->middleware('auth:api');
@@ -62,6 +64,10 @@ Route::post('/refund/{leadId}' , [RefundController::class , 'addRefund']);
 Route::get('/refund-reasons' , [RefundController::class , 'getReasons']);
 Route::get('/all-refunds' , [RefundController::class , 'getAllRefunds']);
 Route::post('/accept-refund/{refundId}' , [RefundController::class , 'acceptRefund']);
+// for suggestion search in home
+Route::get('/search-suggestions', [SearchController::class, 'SearchSuggestions']);
+
+
 // routes for filters
 
 Route::middleware('auth:api')->group(function () {
