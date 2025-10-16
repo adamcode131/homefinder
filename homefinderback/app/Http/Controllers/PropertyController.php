@@ -159,7 +159,7 @@ class PropertyController extends Controller
 
 
         public function deleteProperty($propertyId){
-            $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
+            $property = Property::findOrFail($propertyId);
             $property->delete();
             return response()->json(['message' => 'Property deleted successfully'], 200);
         }   

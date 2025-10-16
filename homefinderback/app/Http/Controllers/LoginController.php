@@ -15,6 +15,7 @@ class LoginController extends Controller
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
+            'phone' => 'required|unique:users',
             'password' => 'required|min:6',
         ]);
 
@@ -22,6 +23,7 @@ class LoginController extends Controller
         $user = User::create([
             'name' => $request->input("name"),
             'email' => $request->input("email"),
+            'phone' => $request->input("phone"),
             'password' => $request->input("password"),
             'role' => 'owner',
         ]);
@@ -130,6 +132,7 @@ public function loginowner(Request $request)
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
+            'phone' => 'required|unique:users',
             'password' => 'required|min:6',
         ]);
 
@@ -137,6 +140,7 @@ public function loginowner(Request $request)
         $user = User::create([
             'name' => $request->input("name"),
             'email' => $request->input("email"),
+            'phone' => $request->input("phone"),
             'password' => $request->input("password"),
             'role' => 'user',
         ]);
