@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     public function getUsers(){
-        $users = User::where('role', 'user')->get();
+        $users = User::all();
         return response()->json(['users' => $users]);
     } 
 
@@ -56,6 +56,25 @@ class UserController extends Controller
                 'password' => bcrypt($request->password),
             ]);
         }
+    }
+
+
+    public function updateUserFromAdminPanel(Request $req , $user_id){
+        
+        $user = User::findOrFail($user_id);
+
+        $validated = $req->validate([
+            "name" => "required" , 
+            "email" => "required|email" , 
+            "phone" => "required" , 
+            "role" => "required" , 
+            "balance" => "required|numeric" , 
+        ]);  
+
+        $user->update($validated) ;
+        $user->save() ; 
+        return response()->json(["message"=>"user updated successfully"], 200) ; 
+
     }
 
 }

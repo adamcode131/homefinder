@@ -37,7 +37,7 @@ Route::middleware('auth:api')->get('/verify-token', [LoginController::class, 've
 Route::middleware('auth:api')->post('/logout', [LoginController::class, 'logout']); 
 Route::get('/villes', [VilleController::class, 'getVilles']); 
 Route::get('/villes/{villeid}/quartiers', [VilleController::class, 'getQuartiersByVille']); 
-Route::get('/ville/{ville}/{quartier?}', [VilleController::class, 'getVilleAndQuartier']); // n8n
+// Route::get('/ville/{ville}/{quartier?}', [VilleController::class, 'getVilleAndQuartier']); // n8n
 Route::get('/research-cities', [VilleController::class, 'getVilleAndQuartier']); // n8n
 Route::middleware('auth:api')->post('/storeProperties', [PropertyController::class, 'storeProperties']);
 Route::get('/properties', [PropertyController::class, 'getProperties']);
@@ -51,6 +51,7 @@ Route::get('/validatedproperties', [PropertyController::class, 'validatedpropert
 Route::patch('/properties/{id}/validate', [PropertyController::class, 'validateProperty']);
 Route::get('/users', [UserController::class, 'getUsers']); 
 Route::get('/user', [UserController::class, 'getUser'])->middleware("auth:api");
+Route::put('/user/{user_id}', [UserController::class, 'updateUserFromAdminPanel'])->middleware("auth:api");
 Route::put('/update_user', [UserController::class, 'updateUser'])->middleware("auth:api");
 Route::post('/leads', [LeadController::class, 'addLead'])->middleware('auth:api'); 
 Route::get('/all_leads', [LeadController::class, 'getLeads'])->middleware('auth:api'); // this one for admin
