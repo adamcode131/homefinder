@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\FilterOptionController;
 use App\Http\Controllers\Client\PropertyFilterController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RefundController;
 use App\Http\Controllers\SearchController;
@@ -68,6 +69,7 @@ Route::post('/accept-refund/{refundId}' , [RefundController::class , 'acceptRefu
 // for suggestion search in home
 Route::get('/search-suggestions', [SearchController::class, 'SearchSuggestions']);
 
+Route::post('addNotification/{id}',[NotificationController::class , 'addNotification'])->middleware('auth:api');
 
 // routes for filters
 
