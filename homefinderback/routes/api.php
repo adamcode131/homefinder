@@ -39,7 +39,6 @@ Route::middleware('auth:api')->post('/logout', [LoginController::class, 'logout'
 Route::get('/villes', [VilleController::class, 'getVilles']); 
 Route::get('/villes/{villeid}/quartiers', [VilleController::class, 'getQuartiersByVille']); 
 // Route::get('/ville/{ville}/{quartier?}', [VilleController::class, 'getVilleAndQuartier']); // n8n
-Route::get('/research-cities', [VilleController::class, 'getVilleAndQuartier']); // n8n
 Route::middleware('auth:api')->post('/storeProperties', [PropertyController::class, 'storeProperties']);
 Route::get('/properties', [PropertyController::class, 'getProperties']);
 Route::get('/updateproperty/{propertyId}', [PropertyController::class, 'updateProperty'])->middleware('auth:api');
@@ -61,7 +60,7 @@ Route::post('/updateBalance', [UserController::class, 'updateBalance'])->middlew
 Route::post('/leads/{lead}/accept', [LeadController::class, 'acceptLead'])->middleware('auth:api') ; 
 Route::post('/result', [PropertyController::class, 'getResult']);
 Route::post('/details/{slug}', [PropertyController::class, 'getBySlug']);
-Route::post('/addLead/{propertyId}', [LeadController::class, 'addLeadNonAuth']);
+Route::post('/addLead/{slug}', [LeadController::class, 'addLeadNonAuth']);
 Route::post('/refund/{leadId}' , [RefundController::class , 'addRefund']);
 Route::get('/refund-reasons' , [RefundController::class , 'getReasons']);
 Route::get('/all-refunds' , [RefundController::class , 'getAllRefunds']);
@@ -70,8 +69,14 @@ Route::post('/accept-refund/{refundId}' , [RefundController::class , 'acceptRefu
 Route::get('/search-suggestions', [SearchController::class, 'SearchSuggestions']);
 
 Route::post('addNotification/{id}',[NotificationController::class , 'addNotification'])->middleware('auth:api');
+Route::get('get-notifications',[NotificationController::class , 'getNotifications'])->middleware('auth:api');
 
-// routes for filters
+// these two were inside a middleware
+Route::get('property-filters', [PropertyFilterController::class, 'getFilters']); // n8n
+Route::post('filter-properties', [PropertyFilterController::class, 'filterProperties']); // n8n
+Route::get('/research-cities', [VilleController::class, 'getVilleAndQuartier']); // n8n
+
+
 
 Route::middleware('auth:api')->group(function () {
 
@@ -80,8 +85,6 @@ Route::middleware('auth:api')->group(function () {
 
         
         // property filters routes
-        Route::get('property-filters', [PropertyFilterController::class, 'getFilters']);
-        Route::post('filter-properties', [PropertyFilterController::class, 'filterProperties']);
         Route::get('property-filters/stats', [PropertyFilterController::class, 'getFilterStats']);
 
 

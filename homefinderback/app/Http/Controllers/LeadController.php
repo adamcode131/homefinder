@@ -93,8 +93,8 @@ public function acceptLead(Lead $lead, Request $request)
         ]);
     } 
 
-    public function addLeadNonAuth(Request $request , $propertyId){ 
-        $property = Property::findOrFail($propertyId);
+    public function addLeadNonAuth(Request $request , $slug){ 
+        $property = Property::where('slug',$slug)->first();
             $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
@@ -107,7 +107,7 @@ public function acceptLead(Lead $lead, Request $request)
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
-                'property_id' => $propertyId,
+                'property_id' => $property->id,
                 'owner_id' => $property->owner_id,
                 'status' => 'pending',
                 'date_reservation' => $request->input('date_reservation'),

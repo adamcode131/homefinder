@@ -11,7 +11,7 @@ class NotificationController extends Controller
 {
  public function addNotification(Request $req, $id)
     {
-        Log::info([$req]);
+        
         $user = User::findOrFail($id);
         
         // Validate the request
@@ -34,5 +34,13 @@ class NotificationController extends Controller
             "added_points" => $validated['added_points'],
             "deducted_points" => $validated['deducted_points']
         ]);
+
+
+    }
+
+    public function getNotifications(){
+        $user = auth()->user() ; 
+        $notifications = Notification::where('owner_id',$user->id)->get() ; 
+        return response()->json($notifications);
     }
 }
