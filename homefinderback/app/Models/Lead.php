@@ -30,4 +30,9 @@ class Lead extends Model
     public function owner(){
         return $this->belongsTo(User::class , 'owner_id')->where('role', 'owner');
     }
+
+    public function notifications(){
+        return $this->hasMany(Notification::class);
+    } 
+    
 }

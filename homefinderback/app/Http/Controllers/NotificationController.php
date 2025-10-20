@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lead;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -40,7 +41,35 @@ class NotificationController extends Controller
 
     public function getNotifications(){
         $user = auth()->user() ; 
-        $notifications = Notification::where('owner_id',$user->id)->get() ; 
+        $notifications = Notification::with(['Lead.property:id,title'])->where('owner_id',$user->id)->get() ; 
         return response()->json($notifications);
+    } 
+
+
+    public function addLeadIdToNotification($leadId){
+        Log::info($leadId);
+        $lead = Lead::findOrFail($leadId) ; 
+        // create the owner_id and the lead_id 
+        Notification::create([
+            "owner_id" => $lead->owner_id ,
+            "lead_id" => $lead->id
+        ]);
+        return response()->json(['message'=>'success'] ,200) ; 
+    }
+
+        public function deleteNotification($id)
+    {
+        $user = auth()->user();
+        
+        // Find the notification and verify it belongs to the authenticated user
+        $notification = Notification::where('id', $id)
+            ->where('owner_id', $user->id)
+            ->firstOrFail();
+
+        $notification->delete();
+
+        return response()->json([
+            'message' => 'Notification deleted successfully'
+        ], 200);
     }
 }

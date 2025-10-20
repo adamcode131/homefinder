@@ -8,5 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Notification extends Model
 {
     use HasFactory;
-    protected $fillable = ['owner_id' , 'lead_id' , 'deducted_points' , 'added_points'] ; 
+    protected $fillable = ['owner_id' , 'lead_id' , 'deducted_points' , 'added_points'] ;
+    public function Lead(){
+        return $this->belongsTo(Lead::class);
+    } 
 }

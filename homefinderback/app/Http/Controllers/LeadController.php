@@ -18,10 +18,9 @@ public function addLead(Request $request)
         $property = Property::where('slug', $slug)->firstOrFail();
 
         if (auth()->check()) {
-            // AUTHENTICATED USER - Use database data
             $user = auth()->user();
 
-            Lead::create([
+            $lead = Lead::create([
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
@@ -31,29 +30,32 @@ public function addLead(Request $request)
                 'status' => 'pending',
                 'date_reservation' => $request->input('date_reservation'),
             ]);
-        } else {
-            // UNAUTHENTICATED USER - Use form data
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
-                'phone' => 'nullable|string|max:20',
-                'date_reservation' => 'required|date',
-            ]);
+        } 
+        // else {
+        //     // UNAUTHENTICATED USER - Use form data
+        //     $request->validate([
+        //         'name' => 'required|string|max:255',
+        //         'email' => 'required|email|max:255',
+        //         'phone' => 'nullable|string|max:20',
+        //         'date_reservation' => 'required|date',
+        //     ]);
 
-            Lead::create([
-                'user_id' => null,
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'phone' => $request->input('phone'),
-                'property_id' => $property->id, // still store the ID
-                'owner_id' => $property->owner_id,
-                'status' => 'pending',
-                'date_reservation' => $request->input('date_reservation'),
-            ]);
-        }
+        //     Lead::create([
+        //         'user_id' => null,
+        //         'name' => $request->input('name'),
+        //         'email' => $request->input('email'),
+        //         'phone' => $request->input('phone'),
+        //         'property_id' => $property->id, // still store the ID
+        //         'owner_id' => $property->owner_id,
+        //         'status' => 'pending',
+        //         'date_reservation' => $request->input('date_reservation'),
+        //     ]);
+        // } 
+
+        
     }
 
-    return response()->json(['message' => 'Reservation confirmed successfully'], 200);
+    return response()->json(['message' => 'Reservation confirmed successfully' , 'lead_id' => $lead->id ], 200);
 }
 
 
@@ -102,7 +104,7 @@ public function acceptLead(Lead $lead, Request $request)
             'date_reservation' => 'required|date',
             ]);
             
-            Lead::create([
+            $lead = Lead::create([
                 'user_id' => null,
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
@@ -112,6 +114,7 @@ public function acceptLead(Lead $lead, Request $request)
                 'status' => 'pending',
                 'date_reservation' => $request->input('date_reservation'),
             ]);
+            return response(['message'=>'lead added successfully' , 'lead_id' => $lead->id ],200) ; 
     }
 }
 

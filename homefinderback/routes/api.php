@@ -12,6 +12,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VilleController;
 use App\Http\Controllers\TestController;
+use App\Models\Notification;
 use App\Models\Property;
 use App\Models\Refund;
 use Illuminate\Http\Request;
@@ -71,11 +72,14 @@ Route::get('/search-suggestions', [SearchController::class, 'SearchSuggestions']
 Route::post('addNotification/{id}',[NotificationController::class , 'addNotification'])->middleware('auth:api');
 Route::get('get-notifications',[NotificationController::class , 'getNotifications'])->middleware('auth:api');
 
-// these two were inside a middleware
 Route::get('property-filters', [PropertyFilterController::class, 'getFilters']); // n8n
 Route::post('filter-properties', [PropertyFilterController::class, 'filterProperties']); // n8n
 Route::get('/research-cities', [VilleController::class, 'getVilleAndQuartier']); // n8n
 
+
+Route::post('/addLeadIdToNotification/{leadId}' , [NotificationController::class , 'addLeadIdToNotification']) ; 
+
+Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification'])->middleware('auth:api');
 
 
 Route::middleware('auth:api')->group(function () {
