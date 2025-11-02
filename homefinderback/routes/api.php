@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\FilterCategoryController;
 use App\Http\Controllers\Admin\FilterOptionController;
+use App\Http\Controllers\CacheController;
 use App\Http\Controllers\Client\PropertyFilterController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LoginController;
@@ -107,6 +108,9 @@ Route::middleware('auth:api')->group(function () {
 });
 
 
+
+Route::get('/get-cached-results',[CacheController::class, 'getCachedResults']) ; 
+Route::post('/save-cached-results',[CacheController::class, 'saveCachedResults']) ; 
 
 
 

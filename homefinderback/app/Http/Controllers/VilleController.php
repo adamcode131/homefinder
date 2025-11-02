@@ -28,42 +28,43 @@ class VilleController extends Controller
     } 
 
 
-    public function getVilleAndQuartier(Request $request)
-    {
+public function getVilleAndQuartier(Request $request)
+{
+    $term = trim($request->get('term', ''));
 
-        $term = isset($request->term) ? $request->term : trim($request->term);
-        $quartier = Quartier::where('name', 'like', '%' . $term . '%')->first();
-        if($quartier)
-            return response()->json(['quartier' => $quartier]);
-        else
-        {
-            $ville = Ville::where('name', 'like', '%' . $term . '%')->first();
-                if($ville)
-                    return response()->json(['ville' => $ville]);
-        }
-           
-        return response()->json(['message' => 'Ville not found'], 404);
-
-
-        if ($ville && $quartier) {
-            // Case: both ville and quartier provided
-            $villeData = Ville::where('name', $ville)
-                ->with(['quartiers' => function($q) use ($quartier) {
-                    $q->where('name', $quartier);
-                }])
-                ->first();
-        } elseif ($ville) {
-            // Case: only ville provided
-            $villeData = Ville::where('name', $ville)
-                ->with('quartiers')
-                ->first();
-        } else {
-            // No ville provided — should not happen due to route
-            return response()->json(['message' => 'Ville not specified'], 400);
-        }
-    
-        return response()->json($villeData);
+    if (!$term) {
+        // No term provided — return empty
+        return response()->json(['term' => null, 'ville' => null, 'quartier' => null]);
     }
+
+    // Try to find a quartier
+    $quartier = Quartier::where('name', 'like', '%' . $term . '%')->first();
+    if ($quartier) {
+        return response()->json([
+            'term' => $term,
+            'quartier' => $quartier,
+            'ville' => $quartier->ville ?? null // if you have relation
+        ]);
+    }
+
+    // Try to find a ville
+    $ville = Ville::where('name', 'like', '%' . $term . '%')->first();
+    if ($ville) {
+        return response()->json([
+            'term' => $term,
+            'ville' => $ville,
+            'quartier' => null
+        ]);
+    }
+
+    // Nothing found — just return what was sent
+    return response()->json([
+        'term' => $term,
+        'ville' => null,
+        'quartier' => null
+    ]);
+}
+
     
     
 }

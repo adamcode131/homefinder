@@ -30,246 +30,201 @@ class PropertyFilterController extends Controller
         ]);
     }
 
-    // public function filterProperties(Request $request)
-    // {
-    //     $query = Property::with(['ville', 'filterValues.filterOption.filterCategory']);
-    
-    //     Log::info('dd request');
-    //     Log::info($request->all());
 
-    //     // Apply filter options (existing logic)
-    //     if ($request->has('filters') && !empty($request->filters)) {
-    //         $filterIds = $request->filters;
-    
-    //         if (is_string($filterIds)) {
-    //             $filterIds = json_decode($filterIds, true);
-    //         }
-    
-    //         if (is_array($filterIds)) {
-    //             $query->whereHas('filterValues', function ($q) use ($filterIds) {
-    //                 $q->whereIn('filter_option_id', $filterIds);
-    //             });
-    //         }
-    //     }
-    //             // NEW: Apply ville filtering if provided
-    //         if ($request->has('ville') && !empty($request->ville)) {
-    //             $villeName = trim($request->ville);
-    //             $query->whereHas('ville', function ($q) use ($villeName) {
-    //                 $q->where('name', 'ilike', $villeName);
-    //             });
-    //         }
 
-    //         // NEW: Apply quartier filtering if provided
-    //         if ($request->has('quartier') && !empty($request->quartier)) {
-    //             $quartierName = trim($request->quartier);
-    //             $query->whereHas('quartier', function ($q) use ($quartierName) {
-    //                 $q->where('name', 'ilike', $quartierName);
-    //             });
-    //         }
 
-    
-    //     if ($request->has('search') && !empty($request->search)) {
-    //         $search = trim($request->search);
-    //         $searchLower = mb_strtolower($search);
-    
-    //         // 1. Detect and apply PRICE filters
-    //         preg_match_all('/\d+/', $search, $matches);
-    //         $numbers = $matches[0] ?? [];
-            
-    //         $minPrice = null;
-    //         $maxPrice = null;
-    
-    //         if (count($numbers) === 1) {
-    //             $minPrice = (int)$numbers[0];
-    //         } elseif (count($numbers) >= 2) {
-    //             $minPrice = (int)$numbers[0];
-    //             $maxPrice = (int)$numbers[1];
-    //         }
-    
-    //         if ($minPrice !== null) {
-    //             $query->where('price', '>=', $minPrice);
-    //         }
-    //         if ($maxPrice !== null) {
-    //             $query->where('price', '<=', $maxPrice);
-    //         }
-    
-    //         // 2. Detect and apply TYPE filter
-    //         if (preg_match('/louer/i', $search)) {
-    //             $query->where('type', 'rent');
-    //         } elseif (preg_match('/vendre|vente/i', $search)) {
-    //             $query->where('type', 'sale');
-    //         }
-    
-    //         // 3. Detect and apply SUPERFICIE filter - UPDATED REGEX
-    //         if (preg_match('/(\d+)\s*(?:m²|m2|m\s*²|metre|mètre|surface|taille|espace)/i', $search, $superficieMatch)) {
-    //             $superficie = (int) $superficieMatch[1];
-    
-    
-    //             if (str_contains($searchLower, 'moins')) {
-    //                 $query->whereNotNull('superficie')
-    //                     ->where('superficie', '<=', $superficie);
-    //             } elseif (str_contains($searchLower, 'plus')) {
-    //                 $query->whereNotNull('superficie')
-    //                     ->where('superficie', '>=', $superficie);
-    //             } elseif (preg_match('/entre\s+(\d+)\s*(?:m|m²)?\s+et\s+(\d+)\s*(?:m|m²)?/i', $search, $betweenMatch)) {
-    //                 $min = (int) $betweenMatch[1];
-    //                 $max = (int) $betweenMatch[2];
-    //                 $query->whereNotNull('superficie')
-    //                     ->whereBetween('superficie', [$min, $max]);
-    //             } else {
-    //                 // Exact or approximate match (you can add tolerance here)
-    //                 $query->where('superficie', '>=', $superficie - 10)
-    //                       ->where('superficie', '<=', $superficie + 10);
-    //             }
-    //         }
-    
-    //         // 4. Extract property type keywords for title search
-    //         // Remove numbers, price indicators, and measurements
-    //         $titleSearch = preg_replace('/\d+\s*(?:dh|mad|dirham|m|m²|metre|mètre)?/i', '', $search);
-    //         $titleSearch = preg_replace('/\bentre\b|\bet\b|à\s*louer|à\s*vendre/i', '', $titleSearch);
-    //         $titleSearch = trim($titleSearch);
-    
-    //         // Only search title if there's meaningful text left
-    //         if (!empty($titleSearch) && strlen($titleSearch) > 2) {
-    //             $driver = DB::getDriverName();
-    //             $query->where(function ($q) use ($titleSearch, $driver) {
-    //                 if ($driver === 'pgsql') {
-    //                     $q->where('title', '=', $titleSearch)
-    //                       ->orWhere('title', 'ILIKE', "%{$titleSearch}%");
-    //                 } else {
-    //                     $lowerTitleSearch = mb_strtolower($titleSearch);
-    //                     $q->whereRaw('LOWER(title) = ?', [$lowerTitleSearch])
-    //                       ->orWhereRaw('LOWER(title) LIKE ?', ["%{$lowerTitleSearch}%"]);
-    //                 }
-    //             });
-    //         }
-    //     }
-    
-    //     $Properties = $query->paginate(10);
-    
-    //     return response()->json($Properties);
-    // }
 
-public function filterProperties(Request $request)
-{
-    $query = Property::with(['ville', 'filterValues.filterOption.filterCategory']);
 
-    Log::info('=== FILTER PROPERTIES REQUEST ===');
-    Log::info('Full request:', $request->all());
 
-    // FIX: Parse the filters parameter if it contains JSON with other parameters
-    $filtersData = [];
-    $filterIds = [];
-    
-    if ($request->has('filters') && !empty($request->filters)) {
-        $filterInput = $request->filters;
-        
-        if (is_string($filterInput)) {
-            // Try to decode as JSON - this might contain both filter IDs and other parameters
-            $decodedFilters = json_decode($filterInput, true);
-            
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedFilters)) {
-                $filtersData = $decodedFilters;
-                Log::info('Parsed filters data: ', $filtersData);
-                
-                // Extract ONLY numeric filter IDs (not page, limit, ville, etc.)
-                $filterIds = array_filter($filtersData, function($value) {
-                    return is_numeric($value);
-                });
-                
-                Log::info('Extracted filter IDs: ', $filterIds);
-            } else {
-                // If it's not JSON, treat it as comma-separated filter IDs (original behavior)
-                $filterIds = explode(',', $filterInput);
-                $filterIds = array_filter(array_map('intval', $filterIds));
+    // filterOption + location  = working
+    // filterOption  = working 
+    // filterOption + radius  = working
+    public function filterProperties(Request $request)
+    {
+        try {
+            Log::info('=== FILTER PROPERTIES REQUEST ===');
+            Log::info('Full request:', $request->all());
+
+            $query = Property::with(['ville', 'filterValues.filterOption.filterCategory'])
+                ->select('properties.*');
+
+            // --- Parse filters (array of filter_option ids) ---
+            $filterIds = [];
+            if ($request->has('filters')) {
+                $filtersData = $request->filters;
+                if (is_string($filtersData)) {
+                    $filtersData = json_decode($filtersData, true);
+                }
+                if (is_array($filtersData)) {
+                    $filterIds = array_map('intval', $filtersData);
+                }
             }
-        } elseif (is_array($filterInput)) {
-            // Original behavior for array input
-            $filterIds = $filterInput;
+
+            if (!empty($filterIds)) {
+                // require property to have any of the provided filter_option ids
+                // Use the full class name to match the model's relationship
+                $query->whereHas('filterValues', function ($q) use ($filterIds) {
+                    $q->whereIn('filter_option_id', $filterIds);
+                });
+            }
+
+            Log::info('filtersData : ', is_array($filtersData) ? $filtersData : []);
+            Log::info('filterIds : ', $filterIds);
+
+            // --- Location detection: explicit location param wins ---
+            $explicitLocation = $request->filled('location') ? trim($request->get('location')) : '';
+            $queryText = trim($request->get('query', ''));
+            $detectedVille = null;
+            $detectedQuartier = null;
+            $useLatLngForProximity = true; // Default to true
+
+            // Determine the search term: explicit location takes priority
+            $term = !empty($explicitLocation) ? $explicitLocation : $queryText;
+
+            // Try to detect quartier or ville from the term
+            if (!empty($term)) {
+                Log::info("Searching location with term: {$term}");
+                
+                // Search quartier by name (exact-ish match)
+                $quartier = Quartier::where('name', 'like', '%' . $term . '%')->first();
+                if ($quartier) {
+                    $detectedQuartier = $quartier;
+                    $useLatLngForProximity = false; // Disable proximity when specific location found
+                    Log::info('Detected quartier: ' . $quartier->name);
+                } else {
+                    // Search ville by name
+                    $ville = Ville::where('name', 'like', '%' . $term . '%')->first();
+                    if ($ville) {
+                        $detectedVille = $ville;
+                        $useLatLngForProximity = false; // Disable proximity when specific location found
+                        Log::info('Detected ville: ' . $ville->name);
+                    }
+                }
+            } else {
+                Log::info('No location term provided - will use lat/lng for proximity if available');
+            }
+
+            // Apply location-based filtering
+            if ($detectedQuartier) {
+                Log::info('Filtering by quartier_id: ' . $detectedQuartier->id);
+                $query->where('properties.quartier_id', $detectedQuartier->id);
+            } elseif ($detectedVille) {
+                Log::info('Filtering by ville_id: ' . $detectedVille->id);
+                $query->where('properties.ville_id', $detectedVille->id);
+            }
+
+            // --- Latitude / Longitude / Radius handling ---
+            $userLat = $request->get('latitude', null);
+            $userLng = $request->get('longitude', null);
+            $radius = (float) $request->get('radius', 0);
+
+            Log::info('Proximity settings:', [
+                'useLatLngForProximity' => $useLatLngForProximity,
+                'userLat' => $userLat,
+                'userLng' => $userLng,
+                'radius' => $radius
+            ]);
+
+            // Compute distance and apply proximity filtering/sorting
+            if ($useLatLngForProximity && !empty($userLat) && !empty($userLng)) {
+                Log::info('Computing distance from user location');
+                
+                // Join villes table to access latitude/longitude
+                $query->join('villes', 'properties.ville_id', '=', 'villes.id');
+                
+                // Add condition to ensure villes have valid coordinates
+                $query->whereNotNull('villes.latitude')
+                    ->whereNotNull('villes.longitude');
+                
+                // Haversine formula using villes latitude/longitude
+                $haversine = "(6371 * acos(
+                    LEAST(1.0, 
+                        cos(radians(?))
+                        * cos(radians(villes.latitude))
+                        * cos(radians(villes.longitude) - radians(?))
+                        + sin(radians(?))
+                        * sin(radians(villes.latitude))
+                    )
+                ))";
+
+                // Add distance calculation to select
+                $query->selectRaw("properties.*, $haversine AS distance", [
+                    $userLat,
+                    $userLng,
+                    $userLat
+                ]);
+
+                // Apply radius filter if specified (radius > 0)
+                if ($radius > 0) {
+                    Log::info("Filtering by radius: {$radius} km");
+                    $query->havingRaw("distance <= ?", [$radius]);
+                }
+                
+                // Always order by distance when using proximity
+                $query->orderBy('distance', 'asc');
+            } else {
+                // No proximity sorting - use default ordering
+                Log::info('Using default ordering (no proximity)');
+                $query->orderBy('properties.id', 'asc');
+            }
+
+            // Log the actual SQL query being executed
+            $sql = $query->toSql();
+            $bindings = $query->getBindings();
+            Log::info('SQL Query: ' . $sql);
+            Log::info('SQL Bindings: ' . json_encode($bindings));
+
+            // Execute the query
+            $properties = $query->get();
+
+            Log::info('=== FILTERED RESULTS COUNT === ' . $properties->count());
+
+            // Debug: If no results, let's check if properties with filter exist at all
+            if ($properties->count() === 0 && !empty($filterIds)) {
+                $debugCount = Property::whereHas('filterValues', function ($q) use ($filterIds) {
+                    $q->whereIn('filter_option_id', $filterIds);
+                })->count();
+                Log::info("DEBUG: Total properties with filter (ignoring location): {$debugCount}");
+                
+                $debugCountWithCoords = Property::whereHas('filterValues', function ($q) use ($filterIds) {
+                    $q->whereIn('filter_option_id', $filterIds);
+                })
+                ->join('villes', 'properties.ville_id', '=', 'villes.id')
+                ->whereNotNull('villes.latitude')
+                ->whereNotNull('villes.longitude')
+                ->count();
+                Log::info("DEBUG: Properties with filter AND valid coordinates: {$debugCountWithCoords}");
+            }
+
+            // Get ordered property IDs
+            $ids = $properties->pluck('id')->values()->toArray();
+            Log::info('💾 Filtered IDs (ordered): ' . json_encode($ids));
+
+            return response()->json([
+                'properties' => $properties,
+                'ordered_ids' => $ids,
+            ]);
+            
+        } catch (\Throwable $e) {
+            Log::error('FILTER PROPERTIES FAILED: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'error' => 'Server error',
+                'message' => $e->getMessage(),
+            ], 500);
         }
-        
-        // Apply filter IDs if found
-        if (!empty($filterIds)) {
-            $query->whereHas('filterValues', function ($q) use ($filterIds) {
-                $q->whereIn('filter_option_id', $filterIds);
-            });
-            Log::info('Applied filter IDs: ', $filterIds);
-        }
-    }
-    if($request->has("location" && !empty($request->location))){
-        $ville = Ville::where('name', 'like', '%' . $request->location . '%')->first();
-        if($ville)
-           $query =  $query->where('ville_id', $ville->id);
-        else
-        {
-            $quartier = Quartier::where('name', 'like', '%' . $request->location . '%')->first();
-            if($quartier)
-                $query =  $query->where('quartier_id', $quartier->id);
-        
-        }
     }
 
-    // FIX: Check both request parameters AND parsed filters data for ville
-    $villeName = null;
-    if ($request->has('ville') && !empty($request->ville)) {
-        $villeName = trim($request->ville);
-    } elseif (isset($filtersData['ville']) && !empty($filtersData['ville'])) {
-        $villeName = trim($filtersData['ville']);
-    }
 
-    if ($villeName) {
-        Log::info('Applying ville filter: ' . $villeName);
-       $query = $query->whereHas('ville', function ($q) use ($villeName) {
-            $q->where(DB::raw('LOWER(name)'), '=', mb_strtolower($villeName));
-        });
-        Log::info('Ville filter applied');
-    } else {
-        Log::info('No ville filter to apply');
-    }
 
-    // FIX: Check both request parameters AND parsed filters data for quartier
-    $quartierName = null;
-    if ($request->has('quartier') && !empty($request->quartier)) {
-        $quartierName = trim($request->quartier);
-    } elseif (isset($filtersData['quartier']) && !empty($filtersData['quartier'])) {
-        $quartierName = trim($filtersData['quartier']);
-    }
 
-    if ($quartierName) {
-        Log::info('Applying quartier filter: ' . $quartierName);
-        $query =$query->whereHas('quartier', function ($q) use ($quartierName) {
-            $q->where(DB::raw('LOWER(name)'), '=', mb_strtolower($quartierName));
-        });
-        Log::info('Quartier filter applied');
-    } else {
-        Log::info('No quartier filter to apply');
-    }
 
-    // FIX: Handle pagination from both sources
-    $page = $request->get('page', 
-        isset($filtersData['page']) ? $filtersData['page'] : 1
-    );
-    $limit = $request->get('limit', 
-        isset($filtersData['limit']) ? $filtersData['limit'] : 50
-    );
 
-    // Debug: Check the SQL query before pagination
-    Log::info('Final SQL Query: ' . $query->toSql());
-    Log::info('Query Bindings: ', $query->getBindings());
 
-    // Get count before pagination for debugging
-    $count = $query->count();
-    Log::info("Total properties after filtering: " . $count);
 
-    $properties = $query->paginate($limit, ['*'], 'page', $page);
 
-    // Log the final results for debugging
-    foreach ($properties as $property) {
-        Log::info('Property: ' . $property->id . ' - Ville: ' . ($property->ville->name ?? 'NULL'));
-    }
 
-    return response()->json($properties);
-}
     
     
 
