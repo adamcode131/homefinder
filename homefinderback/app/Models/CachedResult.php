@@ -12,6 +12,8 @@ class CachedResult extends Model
     protected $fillable = [
         'query',
         'properties_ids',
+        'latitude',
+        'longitude'
     ];
 
     protected $casts = [

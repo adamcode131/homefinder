@@ -10,34 +10,52 @@ use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
- public function addNotification(Request $req, $id)
-    {
-        
-        $user = User::findOrFail($id);
-        
-        // Validate the request
-        $validated = $req->validate([
-            'added_points' => 'required|integer|min:0',
-            'deducted_points' => 'required|integer|min:0',
+public function addNotification(Request $req, $id)
+{
+    Log::info('addNotification called', ['user_id' => $id, 'request_data' => $req->all()]);
+    
+    $user = User::findOrFail($id);
+    
+    // Validate the request
+    $validated = $req->validate([
+        'added_points' => 'required|integer|min:0',
+        'deducted_points' => 'required|integer|min:0',
+    ]);
+
+    Log::info('Validation passed', ['validated_data' => $validated]);
+
+    // Only create notification if there are points to add/deduct
+    if ($validated['added_points'] > 0 || $validated['deducted_points'] > 0) {
+        Log::info('Creating notification', [
+            'added_points' => $validated['added_points'],
+            'deducted_points' => $validated['deducted_points'],
+            'condition' => ($validated['added_points'] > 0 || $validated['deducted_points'] > 0)
         ]);
-
-        // Only create notification if there are points to add/deduct
-        if ($validated['added_points'] > 0 || $validated['deducted_points'] > 0) {
-            Notification::create([
-                'owner_id' => $user->id,
-                'added_points' => $validated['added_points'],
-                'deducted_points' => $validated['deducted_points']
-            ]);
-        }
-
+        
+        $notification = Notification::create([
+            'owner_id' => $user->id,
+            'added_points' => $validated['added_points'],
+            'deducted_points' => $validated['deducted_points']
+        ]);
+        
+        Log::info('Notification created', ['notification_id' => $notification->id]);
+        
         return response()->json([
             "message" => "Notification added successfully",
             "added_points" => $validated['added_points'],
+            "deducted_points" => $validated['deducted_points'],
+            "notification_id" => $notification->id
+        ]);
+    } else {
+        Log::info('No notification created - no points to add/deduct');
+        
+        return response()->json([
+            "message" => "No notification created - no points to add/deduct",
+            "added_points" => $validated['added_points'],
             "deducted_points" => $validated['deducted_points']
         ]);
-
-
     }
+}
 
     public function getNotifications(){
         $user = auth()->user() ; 
@@ -47,7 +65,7 @@ class NotificationController extends Controller
 
 
     public function addLeadIdToNotification($leadId){
-        Log::info($leadId);
+    Log::info($leadId);
         $lead = Lead::findOrFail($leadId) ; 
         // create the owner_id and the lead_id 
         Notification::create([
