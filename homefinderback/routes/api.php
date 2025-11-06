@@ -112,6 +112,4 @@ Route::middleware('auth:api')->group(function () {
 Route::get('/get-cached-results',[CacheController::class, 'getCachedResults']) ; 
 Route::post('/save-cached-results',[CacheController::class, 'saveCachedResults']) ; 
 
-
-
-
+Route::post('/update-profile',[UserController::class , 'updateProfile'])->middleware('auth:api');
