@@ -165,7 +165,7 @@ class PropertyController extends Controller
         }   
 
         public function notvalidatedproperties(){
-            $properties = Property::with('images', 'ville', 'quartier')->where('is_validated', false)->get(); 
+            $properties = Property::with('images', 'ville', 'quartier','owner')->where('is_validated', false)->get(); 
             return response()->json(["properties" => $properties]) ; 
         }
 

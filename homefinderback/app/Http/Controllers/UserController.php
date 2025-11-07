@@ -44,19 +44,35 @@ class UserController extends Controller
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'phone' => 'nullable|string',
-            'password' => 'nullable|string|min:8'
+            'password' => 'nullable|string|min:8',
+            'image' => 'nullable|image|max:2048', // max 2MB
         ]) ;
+
+        // Update basic fields
         $user->update([
             'name' => $request->name ,
             'email' => $request->email ,  
             'phone' => $request->phone ,
         ]); 
 
+        // Update password if provided
         if ($request->filled('password')){
             $user->update([
                 'password' => bcrypt($request->password),
             ]);
         }
+
+        // Handle image upload if present
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            // store in storage/app/public/users
+            $path = $file->store('users', 'public');
+            // Save path to the user's image column
+            $user->image = $path;
+            $user->save();
+        }
+
+        return response()->json(['message' => 'User updated successfully', 'user' => $user->fresh()], 200);
     }
 
 
@@ -108,6 +124,7 @@ public function updateProfile(Request $request){
     
     $validated = $request->validate([
         'name' => 'nullable|string', 
+        'email' => 'nullable|string|email|max:255',
         'phone' => 'nullable|string',
     ]); 
     
@@ -115,7 +132,7 @@ public function updateProfile(Request $request){
     
     if ($request->hasFile('image')){
         Log::info('Image file detected: ' . $request->file('image')->getClientOriginalName());
-        $path = $request->file('image')->store('users','public');
+        $path = $request->file('image')->store('users','public'); // gets stored in storage/app/public
         $validated['image'] = $path; 
         Log::info('Image stored at: ' . $path);
     } else {
