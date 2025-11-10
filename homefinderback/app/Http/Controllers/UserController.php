@@ -132,7 +132,9 @@ public function updateProfile(Request $request){
     
     if ($request->hasFile('image')){
         Log::info('Image file detected: ' . $request->file('image')->getClientOriginalName());
-        $path = $request->file('image')->store('users','public'); // gets stored in storage/app/public
+        $originalName = $request->file('image')->getClientOriginalName();
+        $uniqueName = time() . '_' . $originalName;
+        $path = $request->file('image')->storeAs('users', $uniqueName, 'public');
         $validated['image'] = $path; 
         Log::info('Image stored at: ' . $path);
     } else {
