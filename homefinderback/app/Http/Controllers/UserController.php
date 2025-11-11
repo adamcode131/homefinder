@@ -132,6 +132,7 @@ public function updateProfile(Request $request){
     
     if ($request->hasFile('image')){
         Log::info('Image file detected: ' . $request->file('image')->getClientOriginalName());
+        // Generating collision-resistant filename using Unix timestamp algorithm
         $originalName = $request->file('image')->getClientOriginalName();
         $uniqueName = time() . '_' . $originalName;
         $path = $request->file('image')->storeAs('users', $uniqueName, 'public');

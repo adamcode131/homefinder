@@ -113,3 +113,5 @@ Route::get('/get-cached-results',[CacheController::class, 'getCachedResults']) ;
 Route::post('/save-cached-results',[CacheController::class, 'saveCachedResults']) ; 
 
 Route::post('/update-profile',[UserController::class , 'updateProfile'])->middleware('auth:api');
+Route::get('/getproperty/{id}',[PropertyController::class , 'getProperty'])->middleware('auth:api');
+Route::get('/setProperty/{id}',[PropertyController::class , 'setProperty'])->middleware('auth:api');

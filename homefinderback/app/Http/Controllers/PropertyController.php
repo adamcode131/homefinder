@@ -106,7 +106,7 @@ class PropertyController extends Controller
             $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($propertyId);
 
             // Check ownership
-            if ($property->owner_id !== $user->id) {
+            if ($property->owner_id !== $user->id && $user->role !== 'admin') {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -239,6 +239,29 @@ class PropertyController extends Controller
             ->get();
 
         return response()->json($properties);
+    }
+
+
+    public function adminUpdateProperty($id){
+        $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($id);
+        return response()->json(['property' => $property]) ;
+    }
+     
+
+    public function getProperty($id){
+        $property = Property::with(['images', 'ville', 'quartier'])->findOrFail($id);
+        return response()->json(['property' => $property]) ;
+    }
+
+    public function setProperty($id){
+        $property = Property::findOrFail($id);
+        if ($property->is_validated == 1) {
+            $property->is_validated = 0;
+        } else {
+            $property->is_validated = 1;
+        }
+        $property->save();
+        return response()->json(['property' => $property]) ;
     }
 
 }
